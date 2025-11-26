@@ -1,0 +1,5 @@
+{
+  "name": "SkyHigh Booking",
+  "description": "A modern, responsive flight booking application featuring flight search, interactive seat selection, booking status tracking, and user profile management.",
+  "requestFramePermissions": []
+}

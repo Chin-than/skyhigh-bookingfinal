@@ -9,7 +9,7 @@ dotenv.config();
 const Flight = require('./models/Flight.cjs'); 
 
 // The MongoDB Connection URI
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/skyhighDB';
+const MONGO_URI = "mongodb+srv://Chintu:Chinthan@cluster0.ogvktf8.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 // --- FLIGHT DATA (Copied from your mockData.ts) ---
 const MOCK_FLIGHTS_DATA = [
@@ -149,31 +149,15 @@ const MOCK_FLIGHTS_DATA = [
 
 const seedDB = async () => {
     try {
+        // Use the same connection logic
         await mongoose.connect(MONGO_URI);
-        console.log('--- MongoDB Connected for Seeding ---');
+        console.log('--- MongoDB Atlas Connected for Seeding ---');
 
-        // 1. CLEAR existing data (Optional, but recommended for clean testing)
-        await Flight.deleteMany({});
-        console.log('✅ Existing flights deleted.');
-
-        // 2. INSERT new data
-        // We map the 'id' field from your mock data to the 'flightId' field in the Mongoose schema
-        const flightsToInsert = MOCK_FLIGHTS_DATA.map(flight => ({
-            ...flight,
-            // Remove the redundant 'id' field if your schema doesn't need it
-            id: undefined,
-            // Mongoose automatically uses the flightId field from the mock data as per schema.
-        }));
-
-        await Flight.insertMany(flightsToInsert);
-        console.log(`✅ ${flightsToInsert.length} new flights successfully seeded!`);
-
+        // ... rest of the seeding logic
     } catch (error) {
         console.error('❌ SEEDING FAILED:', error.message);
     } finally {
-        // 3. Disconnect from DB
         await mongoose.connection.close();
-        console.log('--- Database connection closed ---');
         process.exit();
     }
 }

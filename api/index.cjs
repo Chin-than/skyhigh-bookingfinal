@@ -23,12 +23,18 @@ app.use(cors({
 app.use(express.json());
 
 // --- DATABASE CONNECTION ---
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/skyhighDB';
+const MONGO_URI = "mongodb+srv://Chintu:Chinthan@cluster0.ogvktf8.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 const connectDB = async () => {
     try {
-        await mongoose.connect(MONGO_URI);
-        console.log('✅ MongoDB Connected Successfully!');
+        // Updated options for better cloud stability
+        await mongoose.connect(MONGO_URI, {
+            // These options are often default in newer Mongoose versions 
+            // but good to be explicit if you run into issues:
+            serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+            socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+        });
+        console.log('✅ MongoDB Atlas Connected Successfully!');
     } catch (error) {
         console.error(`❌ MongoDB Connection Error: ${error.message}`);
         process.exit(1);

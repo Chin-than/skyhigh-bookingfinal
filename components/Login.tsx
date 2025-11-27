@@ -1,3 +1,5 @@
+// File: components/Login.tsx
+
 import React, { useState } from 'react';
 import { User, AppRoute } from '../types';
 
@@ -7,31 +9,52 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin, onNavigate }) => {
-  // Pre-fill default credentials for easier testing
-  const [email, setEmail] = useState('rahul.sharma@example.com');
-  const [password, setPassword] = useState('password123');
+  // MODIFICATION: Set initial state to empty strings instead of default credentials
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-        // Mock existing user with full profile
-        const existingUser: User = {
-          id: 'u1',
-          name: 'Rahul Sharma',
-          email: email,
-          phone: '+91 98765 43210',
-          dob: '1992-08-15',
-          address: '42, Mahatma Gandhi Road, Bangalore, Karnataka, 560001',
-          gender: 'Male',
-          nationality: 'Indian'
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.msg || 'Login failed. Please check credentials.');
+      }
+      
+      const loggedInUser: User = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          phone: data.user.phone,
+          dob: data.user.dob,
+          address: data.user.address,
+          gender: data.user.gender,
+          nationality: data.user.nationality,
+          // Add other fields if returned by backend
         };
-        setIsLoading(false);
-        onLogin(existingUser);
-    }, 800);
+
+      onLogin(loggedInUser);
+
+    } catch (err) {
+      console.error('Login API Error:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred during login.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -52,6 +75,13 @@ const Login: React.FC<LoginProps> = ({ onLogin, onNavigate }) => {
             Sign in to access your bookings
           </p>
         </div>
+
+        {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-sm" role="alert">
+                <span className="block sm:inline">{error}</span>
+            </div>
+        )}
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>

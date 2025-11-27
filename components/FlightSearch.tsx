@@ -1,6 +1,8 @@
-import React, { useState, useMemo } from 'react';
+// File: components/FlightSearch.tsx (MODIFIED)
+
+import React, { useState, useMemo, useEffect } from 'react';
 import { Flight } from '../types';
-import { MOCK_FLIGHTS, INDIAN_AIRPORTS } from '../services/mockData';
+import { INDIAN_AIRPORTS } from '../services/mockData'; // Keep Airport data
 
 interface FlightSearchProps {
   onSelectFlight: (flight: Flight) => void;
@@ -10,23 +12,79 @@ const FlightSearch: React.FC<FlightSearchProps> = ({ onSelectFlight }) => {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [date, setDate] = useState('');
+  const [allFlights, setAllFlights] = useState<Flight[]>([]); // New state for fetched flights
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // --- NEW: Fetch flights on component mount ---
+  useEffect(() => {
+    const fetchFlights = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch flights from your Express server
+        // NOTE: In a full app, you would pass search params here: /api/flights/?origin=DEL&destination=BOM
+        const response = await fetch('/api/flights'); 
+        const data: Flight[] = await response.json(); 
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch flights from the server.');
+        }
+
+        setAllFlights(data);
+      } catch (err) {
+        console.error('Flight Fetch Error:', err);
+        setError('Could not connect to the flight server or no data available.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFlights();
+  }, []); 
+  // ---------------------------------------------
+
 
   const filteredFlights = useMemo(() => {
-    return MOCK_FLIGHTS.filter(flight => {
+    // Filter the fetched flight data
+    return allFlights.filter(flight => {
       const matchFrom = from ? flight.originCode === from : true;
       const matchTo = to ? flight.destinationCode === to : true;
-      // Simple date matching - in real app would parse dates
+      // Simple date matching - in real app would parse dates and check flight.departureTime
+      // For now, only filter by origin and destination
       return matchFrom && matchTo;
     });
-  }, [from, to]);
+  }, [from, to, allFlights]);
 
   // Sort airports by city name for easier searching
   const sortedAirports = useMemo(() => {
       return [...INDIAN_AIRPORTS].sort((a, b) => a.city.localeCompare(b.city));
   }, []);
 
+  // --- NEW: Render loading state or error ---
+  if (isLoading) {
+    return (
+        <div className="max-w-7xl mx-auto px-4 py-12 text-center text-slate-500">
+            <i className="fa-solid fa-plane fa-spin text-3xl mb-4"></i>
+            <p className="text-lg">Loading flights from database...</p>
+        </div>
+    );
+  }
+
+  if (error) {
+    return (
+        <div className="max-w-7xl mx-auto px-4 py-12 text-center text-red-700 bg-red-50 border border-red-200 rounded-xl">
+            <i className="fa-solid fa-circle-exclamation text-3xl mb-4"></i>
+            <p className="text-lg font-medium">{error}</p>
+            <p className="text-sm mt-2">Please ensure your Node.js server is running on port 5000 and your MongoDB is connected.</p>
+        </div>
+    );
+  }
+  // ---------------------------------------------
+  
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+      {/* Search Input Section (JSX remains mostly the same) */}
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
         <div className="bg-brand-600 px-6 py-8 sm:px-12 sm:py-10 text-center">
           <h2 className="text-3xl font-extrabold text-white tracking-tight">
@@ -37,6 +95,7 @@ const FlightSearch: React.FC<FlightSearchProps> = ({ onSelectFlight }) => {
           </p>
         </div>
         
+        {/* ... (input fields and selection logic remain the same) ... */}
         <div className="p-6 sm:p-8 bg-white">
           <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-3">
             <div>
@@ -101,7 +160,8 @@ const FlightSearch: React.FC<FlightSearchProps> = ({ onSelectFlight }) => {
           </div>
         </div>
       </div>
-
+    
+      {/* Flight Results Section */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold text-slate-900">Available Flights</h3>
@@ -122,6 +182,7 @@ const FlightSearch: React.FC<FlightSearchProps> = ({ onSelectFlight }) => {
         ) : (
           filteredFlights.map((flight) => (
             <div key={flight.id} className="bg-white rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col sm:flex-row">
+              {/* ... (Flight Display JSX remains the same) ... */}
               <div className="p-6 flex-1 flex flex-col justify-center">
                 <div className="flex items-center justify-between mb-4">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-100 text-brand-800">
@@ -131,6 +192,7 @@ const FlightSearch: React.FC<FlightSearchProps> = ({ onSelectFlight }) => {
                 </div>
                 <div className="flex items-center justify-between w-full">
                   <div className="text-center">
+                    {/* NOTE: You may need to adjust date formatting based on how MongoDB stores the date string */}
                     <div className="text-2xl font-bold text-slate-900">{new Date(flight.departureTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                     <div className="text-sm font-medium text-slate-500">{flight.originCode}</div>
                   </div>

@@ -1,3 +1,5 @@
+// File: components/Profile.tsx (MODIFIED)
+
 import React, { useState, useEffect } from 'react';
 import { User } from '../types';
 
@@ -10,6 +12,9 @@ interface ProfileProps {
 const Profile: React.FC<ProfileProps> = ({ user, onUpdate, required = false }) => {
   const [formData, setFormData] = useState<User>(user);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   // Automatically enter edit mode if required information is missing
   useEffect(() => {
@@ -20,13 +25,48 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdate, required = false }) =
 
   const isProfileComplete = formData.name && formData.email && formData.dob && formData.address && formData.gender && formData.nationality;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdate(formData);
-    
-    // If the profile is now complete, exit edit mode to show the view mode
-    if (isProfileComplete) {
-        setIsEditing(false);
+    setIsSaving(true);
+    setError('');
+    setSuccessMsg('');
+
+    try {
+        // --- API CALL TO UPDATE PROFILE ---
+        const response = await fetch('/api/auth/profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            // Send the updated formData including the user ID
+            body: JSON.stringify(formData),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.msg || 'Failed to update profile');
+        }
+
+        // Update the global app state with the new user data from server
+        onUpdate(data.user);
+        
+        setSuccessMsg('Profile updated successfully!');
+        
+        // If the profile is now complete, exit edit mode
+        if (isProfileComplete) {
+            // Short delay to show success message before switching view
+            setTimeout(() => {
+                setIsEditing(false);
+                setSuccessMsg('');
+            }, 1000);
+        }
+
+    } catch (err) {
+        console.error('Profile Update Error:', err);
+        setError(err instanceof Error ? err.message : 'An error occurred while saving.');
+    } finally {
+        setIsSaving(false);
     }
   };
 
@@ -80,6 +120,18 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdate, required = false }) =
                 )}
             </div>
 
+            {/* Success/Error Messages */}
+            {error && (
+                <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                    {error}
+                </div>
+            )}
+            {successMsg && (
+                <div className="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+                    {successMsg}
+                </div>
+            )}
+
             {isEditing ? (
                 <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -102,7 +154,8 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdate, required = false }) =
                             <input
                                 type="date"
                                 required
-                                value={formData.dob || ''}
+                                // Ensure date format handles generic date strings safely
+                                value={formData.dob ? new Date(formData.dob).toISOString().split('T')[0] : ''}
                                 onChange={e => setFormData({...formData, dob: e.target.value})}
                                 className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-2"
                             />
@@ -143,9 +196,10 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdate, required = false }) =
                             <input
                                 type="email"
                                 required
+                                disabled // Email updates disabled for simplicity
                                 value={formData.email}
                                 onChange={e => setFormData({...formData, email: e.target.value})}
-                                className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-2"
+                                className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 border p-2 bg-slate-100 cursor-not-allowed"
                             />
                          </div>
                          <div>
@@ -174,7 +228,11 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdate, required = false }) =
                         {!required && (
                             <button
                                 type="button"
-                                onClick={() => setIsEditing(false)}
+                                onClick={() => {
+                                    setIsEditing(false);
+                                    setFormData(user); // Reset form to original user data
+                                    setError('');
+                                }}
                                 className="px-4 py-2 text-slate-700 font-medium hover:text-slate-900"
                             >
                                 Cancel
@@ -182,13 +240,14 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdate, required = false }) =
                         )}
                         <button
                             type="submit"
-                            disabled={!isProfileComplete}
-                            className={`px-6 py-2 rounded-lg font-medium shadow-sm transition-all ${
-                                isProfileComplete 
+                            disabled={!isProfileComplete || isSaving}
+                            className={`px-6 py-2 rounded-lg font-medium shadow-sm transition-all flex items-center gap-2 ${
+                                isProfileComplete && !isSaving
                                 ? 'bg-brand-600 text-white hover:bg-brand-700' 
                                 : 'bg-slate-300 text-slate-500 cursor-not-allowed'
                             }`}
                         >
+                            {isSaving && <i className="fa-solid fa-circle-notch fa-spin"></i>}
                             {required ? 'Save & Continue' : 'Save Changes'}
                         </button>
                     </div>

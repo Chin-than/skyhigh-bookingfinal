@@ -1,3 +1,5 @@
+// File: components/Signup.tsx (MODIFIED)
+
 import React, { useState } from 'react';
 import { User, AppRoute } from '../types';
 
@@ -11,25 +13,48 @@ const Signup: React.FC<SignupProps> = ({ onSignup, onNavigate }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-        // Mock new user with incomplete profile
-        const newUser: User = {
-          id: `u${Date.now()}`,
-          name: name || 'New User',
-          email: email,
-          // Other fields undefined to trigger profile completion flow
-        };
-        setIsLoading(false);
-        onSignup(newUser);
-    }, 800);
-  };
+    setError('');
 
+    try {
+        const response = await fetch('/api/auth/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.msg || 'Registration failed.');
+        }
+
+        // On successful registration, you get back the token and basic user info.
+        // NOTE: In a real app, you would store the token (data.token)
+        
+        // Construct the new User object to satisfy the front-end state
+        const newUser: User = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          // Other profile fields are undefined, forcing profile completion flow
+        };
+
+        setIsLoading(false);
+        onSignup(newUser); // Calls handleLogin in App.tsx
+        
+    } catch (err) {
+        console.error('Signup API Error:', err);
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred during signup.');
+        setIsLoading(false);
+    }
+  };
+  // ... (Rest of the component remains the same for JSX)
+// ... (Rest of the component remains the same for JSX)
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         {/* Background Decorative Circles */}
@@ -48,6 +73,13 @@ const Signup: React.FC<SignupProps> = ({ onSignup, onNavigate }) => {
             Join SkyHigh today
           </p>
         </div>
+        
+        {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-sm" role="alert">
+                <span className="block sm:inline">{error}</span>
+            </div>
+        )}
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
               <div>

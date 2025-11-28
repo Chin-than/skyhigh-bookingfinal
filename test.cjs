@@ -1,13 +1,16 @@
 const mongoose = require('mongoose');
-// Hardcode the string here just for testing (REPLACE PASSWORD CAREFULLY)
-const uri = "mongodb+srv://Chintu:Chinthan@cluster0.ogvktf8.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+
+const uri = "mongodb+srv://Chintu:Chinthan@cluster0.ogvktf8.mongodb.net/?appName=Cluster0";
+
+console.log("⏳ Attempting to connect...");
 
 mongoose.connect(uri)
   .then(() => {
-    console.log("✅ CONNECTED!");
+    console.log("✅ CONNECTED SUCCESSFULLY!");
     process.exit(0);
   })
   .catch(err => {
-    console.error("❌ FAILED:", err.message);
+    console.error("❌ CONNECTION FAILED");
+    console.error("Reason:", err.message);
     process.exit(1);
   });

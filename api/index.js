@@ -23,7 +23,7 @@ app.use(cors({
 app.use(express.json());
 
 // --- DATABASE CONNECTION ---
-const MONGO_URI = "mongodb+srv://Chintu:Chinthan@cluster0.ogvktf8.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const MONGO_URI = "mongodb+srv://Chintu:Chinthan@cluster0.ogvktf8.mongodb.net/?appName=Cluster0";
 
 const connectDB = async () => {
     try {

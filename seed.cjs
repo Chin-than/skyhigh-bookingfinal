@@ -1,20 +1,16 @@
 // File: seed.cjs
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
 
-// Load environment variables (like MONGO_URI)
-dotenv.config();
-
-// Require the Flight model (ensure this path and extension is correct)
+// Require the Flight model
 const Flight = require('./models/Flight.cjs'); 
 
-// The MongoDB Connection URI
-const MONGO_URI = "mongodb+srv://Chintu:Chinthan@cluster0.ogvktf8.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+// The MongoDB Connection URI (Using the working admin_user credentials)
+const MONGO_URI = "mongodb+srv://Chintu:Chinthan@cluster0.ogvktf8.mongodb.net/?appName=Cluster0";
 
-// --- FLIGHT DATA (Copied from your mockData.ts) ---
+// --- FLIGHT DATA ---
 const MOCK_FLIGHTS_DATA = [
   {
-    flightId: 'f1', // Using flightId for schema, map from 'id'
+    flightId: 'f1',
     airline: 'IndiGo',
     flightNumber: '6E-2045',
     origin: 'New Delhi',
@@ -144,16 +140,22 @@ const MOCK_FLIGHTS_DATA = [
     duration: '2h 15m'
   }
 ];
-// --- END FLIGHT DATA ---
-
 
 const seedDB = async () => {
     try {
-        // Use the same connection logic
         await mongoose.connect(MONGO_URI);
         console.log('--- MongoDB Atlas Connected for Seeding ---');
 
-        // ... rest of the seeding logic
+        // 1. DELETE existing flights so we don't get duplicates
+        await Flight.deleteMany({});
+        console.log('✅ Existing flights deleted.');
+
+        // 2. INSERT the new flights
+        await Flight.insertMany(MOCK_FLIGHTS_DATA);
+        
+        // This is the message you were missing!
+        console.log(`✅ ${MOCK_FLIGHTS_DATA.length} new flights successfully seeded!`);
+
     } catch (error) {
         console.error('❌ SEEDING FAILED:', error.message);
     } finally {

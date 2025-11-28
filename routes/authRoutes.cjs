@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User.cjs'); 
 
 // Secret key for JWT (use process.env in a real app!)
-const JWT_SECRET = 'your_super_secret_jwt_key';
+const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key';
 
 // @route   POST /api/auth/signup
 // @desc    Register a new user

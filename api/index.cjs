@@ -53,8 +53,10 @@ app.get('/', (req, res) => {
 });
 
 // --- START SERVER ---
-const PORT = process.env.PORT || 5000;
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`🚀 Server started on http://localhost:${PORT}`));
+}
 
-app.listen(PORT, () => console.log(`🚀 Server started on http://localhost:${PORT}`));
-
+// MUST HAVE THIS LINE FOR VERCEL:
 module.exports = app;

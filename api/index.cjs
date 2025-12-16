@@ -7,6 +7,7 @@ const cors = require('cors'); // To allow front-end and back-end to communicate
 // Import Routes
 const authRoutes = require('../routes/authRoutes.cjs');
 const flightRoutes = require('../routes/flightRoutes.cjs');
+const metricsRoutes = require('../routes/metrics.cjs');
 
 // Load environment variables (like MONGO_URI) from .env file
 dotenv.config();
@@ -46,6 +47,7 @@ connectDB();
 // --- API ROUTES ---
 app.use('/api/auth', authRoutes);      // Handles /api/auth/login, /api/auth/signup
 app.use('/api/flights', flightRoutes); // Handles /api/flights/search, etc.
+app.use('/api/metrics', metricsRoutes);
 
 // Basic Test Route
 app.get('/', (req, res) => {

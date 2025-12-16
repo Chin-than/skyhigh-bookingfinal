@@ -1,0 +1,11 @@
+apiVersion: 1
+
+datasources:
+  - name: Sky High Prometheus
+    type: prometheus
+    uid: sky-high-prometheus
+    access: proxy
+    orgId: 1
+    url: http://127.0.0.1:9090
+    isDefault: false
+    editable: true

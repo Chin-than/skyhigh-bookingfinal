@@ -1,0 +1,35 @@
+# ops/prometheus/alert_rules.yml
+groups:
+  - name: sky-high-alerts
+    rules:
+
+      - alert: ServiceReadinessDown
+        expr: service_readiness == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service readiness is 0 for user-preferences-service"
+          description: "service_readiness gauge is 0 for >1m on instance {{ $labels.instance }}"
+
+      - alert: HighErrorRate
+        expr: increase(preference_ops_total{operation="create"}[5m]) + increase(preference_ops_total{operation="update"}[5m]) == 0
+        # This rule is an example placeholder — for real error-rate you should instrument an errors counter.
+        # Below is a recommended error counter expression (if you add a counter 'http_errors_total'):
+        # expr: increase(http_errors_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Check logs for spikes in errors for the last 5m."
+
+      - alert: HTTPLatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 1.0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API latency p95 > 1s"
+          description: "95th percentile HTTP request latency over 5m is > 1s."
+

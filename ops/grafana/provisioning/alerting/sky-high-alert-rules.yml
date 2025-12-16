@@ -1,0 +1,38 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: sky-high-alerts
+    folder: Sky High Alerts
+    interval: 1m
+    rules:
+      - uid: service-readiness-down
+        title: Service Readiness Down
+
+        # Alert when query A is true (readiness < 1)
+        condition: A
+
+        repeatInterval: 5m
+
+        data:
+          # Query A: readiness should be 1; alert if it is < 1
+          - refId: A
+            datasourceUid: sky-high-prometheus
+            queryType: timeSeriesQuery
+            relativeTimeRange:
+              from: 60
+              to: 0
+            model:
+              refId: A
+              expr: service_readiness < 1
+              intervalMs: 60000
+              maxDataPoints: 43200
+
+        noDataState: Alerting
+        execErrState: Error
+        for: 1m
+        annotations:
+          description: "Service readiness gauge reported 0"
+          summary: "User Preferences Service may be unhealthy"
+        labels:
+          severity: critical

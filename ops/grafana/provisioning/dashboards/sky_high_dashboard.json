@@ -1,0 +1,155 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sky-high-prometheus"
+      },
+      "fieldConfig": {},
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 0 },
+      "id": 2,
+      "title": "Request Rate (per second)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "sky-high-prometheus"
+          },
+          "expr": "sum(rate(http_request_duration_seconds_count[1m])) by (method)",
+          "legendFormat": "{{method}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sky-high-prometheus"
+      },
+      "fieldConfig": {},
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 0 },
+      "id": 3,
+      "title": "HTTP Latency (p50/p95)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "sky-high-prometheus"
+          },
+          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p50",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "sky-high-prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sky-high-prometheus"
+      },
+      "fieldConfig": {},
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 6 },
+      "id": 4,
+      "title": "DB Query Duration (avg)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "sky-high-prometheus"
+          },
+          "expr": "rate(db_query_duration_seconds_sum[1m]) / rate(db_query_duration_seconds_count[1m])",
+          "legendFormat": "avg db query (s)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sky-high-prometheus"
+      },
+      "fieldConfig": {},
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 6 },
+      "id": 5,
+      "title": "Preference Ops (by operation)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "sky-high-prometheus"
+          },
+          "expr": "sum(rate(preference_ops_total[1m])) by (operation)",
+          "legendFormat": "{{operation}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sky-high-prometheus"
+      },
+      "fieldConfig": {},
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 12 },
+      "id": 6,
+      "title": "Service Readiness",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "sky-high-prometheus"
+          },
+          "expr": "service_readiness",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "sky-high-prometheus"
+      },
+      "fieldConfig": {},
+      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 16 },
+      "id": 8,
+      "title": "Top endpoints by p95 latency",
+      "type": "table",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "sky-high-prometheus"
+          },
+          "expr": "topk(10, histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint)))",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["sky-high-service"],
+  "title": "Sky High Service - Overview",
+  "uid": null,
+  "version": 1
+}

@@ -1,0 +1,10 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: sky-high-email-primary
+    receivers:
+      - uid: sky-high-email-primary
+        type: email
+        settings:
+          addresses: "chinthan.girisha@mt.com"

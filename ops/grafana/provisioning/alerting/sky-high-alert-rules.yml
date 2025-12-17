@@ -24,7 +24,7 @@ groups:
               to: 0
             model:
               refId: A
-              expr: service_readiness < 1
+              expr:  up < 1
               intervalMs: 60000
               maxDataPoints: 43200
 
@@ -33,6 +33,6 @@ groups:
         for: 1m
         annotations:
           description: "Service readiness gauge reported 0"
-          summary: "User Preferences Service may be unhealthy"
+          summary: "Sky High Service may be unhealthy"
         labels:
           severity: critical

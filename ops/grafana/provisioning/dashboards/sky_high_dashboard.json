@@ -65,28 +65,6 @@
         "uid": "sky-high-prometheus"
       },
       "fieldConfig": {},
-      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 6 },
-      "id": 4,
-      "title": "DB Query Duration (avg)",
-      "type": "timeseries",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "sky-high-prometheus"
-          },
-          "expr": "rate(db_query_duration_seconds_sum[1m]) / rate(db_query_duration_seconds_count[1m])",
-          "legendFormat": "avg db query (s)",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "sky-high-prometheus"
-      },
-      "fieldConfig": {},
       "gridPos": { "h": 6, "w": 12, "x": 12, "y": 6 },
       "id": 5,
       "title": "Preference Ops (by operation)",
@@ -97,8 +75,8 @@
             "type": "prometheus",
             "uid": "sky-high-prometheus"
           },
-          "expr": "sum(rate(preference_ops_total[1m])) by (operation)",
-          "legendFormat": "{{operation}}",
+          "expr": "sum(rate(http_requests_total[1m])) by (method)",
+          "legendFormat": "{{method}}",
           "refId": "A"
         }
       ]
@@ -150,6 +128,6 @@
   "style": "dark",
   "tags": ["sky-high-service"],
   "title": "Sky High Service - Overview",
-  "uid": null,
+  "uid": "skyhigh-overview",
   "version": 1
 }

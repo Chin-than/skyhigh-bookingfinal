@@ -2,7 +2,7 @@ apiVersion: 1
 
 policies:
   - orgId: 1
-    receiver: sky-high-email-primary
+    receiver: skyhigh-email-primary
 
     # Match only alerts from this specific folder
     matchers:

@@ -3,7 +3,7 @@ apiVersion: 1
 providers:
   - name: "Sky High Dashboards"
     orgId: 1
-    folder: "SkyHigh"
+    folder: "Sky High"
     type: file
     allowUiUpdates: true
     disableDeletion: false

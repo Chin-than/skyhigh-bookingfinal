@@ -1,64 +1,90 @@
-// File: server.js
+// File: api/index.cjs
 const express = require('express');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-const cors = require('cors'); // To allow front-end and back-end to communicate
+const cors = require('cors');
+const client = require('prom-client');
 
-// Import Routes
-const authRoutes = require('../routes/authRoutes.cjs');
-const flightRoutes = require('../routes/flightRoutes.cjs');
-const metricsRoutes = require('../routes/metrics.cjs');
-
-// Load environment variables (like MONGO_URI) from .env file
+// ----- 1. INITIALIZE APP & ENV -----
 dotenv.config();
+const app = express(); // Initialized early to prevent ReferenceErrors
 
-const app = express();
+// ----- 2. PROMETHEUS SETUP -----
+const register = new client.Registry();
+client.collectDefaultMetrics({
+    register,
+    prefix: 'skyhigh_',
+});
 
-// --- MIDDLEWARE ---
-// Use CORS to allow requests from your Vite front-end (http://localhost:3000)
+const httpRequestDurationSeconds = new client.Histogram({
+    name: 'http_request_duration_seconds',
+    help: 'Duration of HTTP requests in seconds',
+    labelNames: ['method', 'route', 'status_code'],
+    buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2, 5],
+});
+register.registerMetric(httpRequestDurationSeconds);
+
+// ----- 3. GLOBAL MIDDLEWARE -----
+app.use((req, res, next) => {
+    const end = httpRequestDurationSeconds.startTimer();
+    res.on('finish', () => {
+        end({
+            method: req.method,
+            route: req.route ? req.route.path : req.path,
+            status_code: res.statusCode,
+        });
+    });
+    next();
+});
+
 app.use(cors({
-    origin: 'http://localhost:3000', 
+    origin: 'http://localhost:3000',
     credentials: true,
 }));
-// Allows the server to read JSON data from the request body
 app.use(express.json());
 
-// --- DATABASE CONNECTION ---
-const MONGO_URI = "mongodb+srv://Chintu:Chinthan@cluster0.ogvktf8.mongodb.net/?appName=Cluster0";
+// ----- 4. DATABASE CONNECTION -----
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://Chintu:Chinthan@cluster0.ogvktf8.mongodb.net/?appName=Cluster0";
 
 const connectDB = async () => {
     try {
-        // Updated options for better cloud stability
         await mongoose.connect(MONGO_URI, {
-            // These options are often default in newer Mongoose versions 
-            // but good to be explicit if you run into issues:
-            serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-            socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
         });
         console.log('✅ MongoDB Atlas Connected Successfully!');
     } catch (error) {
         console.error(`❌ MongoDB Connection Error: ${error.message}`);
         process.exit(1);
     }
-}
-
+};
 connectDB();
 
-// --- API ROUTES ---
-app.use('/api/auth', authRoutes);      // Handles /api/auth/login, /api/auth/signup
-app.use('/api/flights', flightRoutes); // Handles /api/flights/search, etc.
-app.use('/api/metrics', metricsRoutes);
+// ----- 5. ROUTES -----
+const authRoutes = require('../routes/authRoutes.cjs');
+const flightRoutes = require('../routes/flightRoutes.cjs');
 
-// Basic Test Route
+app.use('/api/auth', authRoutes);
+app.use('/api/flights', flightRoutes);
+
+// Metrics endpoint
+app.get('/api/metrics', async (req, res) => {
+    try {
+        res.setHeader('Content-Type', register.contentType);
+        res.end(await register.metrics());
+    } catch (err) {
+        res.status(500).send('Error collecting metrics');
+    }
+});
+
 app.get('/', (req, res) => {
     res.send('SkyHigh API is Running');
 });
 
-// --- START SERVER ---
+// ----- 6. SERVER START -----
 if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => console.log(`🚀 Server started on http://localhost:${PORT}`));
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`🚀 Server started on http://localhost:${PORT}`));
 }
 
-// MUST HAVE THIS LINE FOR VERCEL:
 module.exports = app;

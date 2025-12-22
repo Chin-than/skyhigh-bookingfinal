@@ -8,6 +8,11 @@ const client = require('prom-client');
 // ----- 1. INITIALIZE APP & ENV -----
 dotenv.config();
 const app = express(); // Initialized early to prevent ReferenceErrors
+const sequelize = new Sequelize('skyhigh_db', 'postgres', 'root', {
+    host: 'localhost',
+    dialect: 'postgres',
+    logging: false
+});
 
 // ----- 2. PROMETHEUS SETUP -----
 const register = new client.Registry();
@@ -44,11 +49,6 @@ app.use(cors({
 app.use(express.json());
 
 // ----- 4. DATABASE CONNECTION -----
-const sequelize = new Sequelize('skyhigh_db', 'postgres', 'root', {
-    host: 'localhost',
-    dialect: 'postgres',
-    logging: false
-});
 
 const connectDB = async () => {
     try {
@@ -68,11 +68,11 @@ connectDB();
 
 
 // ----- 5. ROUTES -----
-const authRoutes = require('../routes/authRoutes.cjs');
-const flightRoutes = require('../routes/flightRoutes.cjs');
+// const authRoutes = require('../routes/authRoutes.cjs');
+// const flightRoutes = require('../routes/flightRoutes.cjs');
 
-app.use('/api/auth', authRoutes);
-app.use('/api/flights', flightRoutes);
+// app.use('/api/auth', authRoutes);
+// app.use('/api/flights', flightRoutes);
 
 // Metrics endpoint
 app.get('/api/metrics', async (req, res) => {
@@ -95,3 +95,9 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 module.exports = { app, sequelize };
+
+const authRoutes = require('../routes/authRoutes.cjs');
+const flightRoutes = require('../routes/flightRoutes.cjs');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/flights', flightRoutes);

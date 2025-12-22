@@ -94,7 +94,7 @@ if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () => console.log(`🚀 Server started on http://localhost:${PORT}`));
 }
 
-module.exports = { app, sequelize };
+module.exports = { app, sequelize, httpRequestDurationSeconds };
 
 const authRoutes = require('../routes/authRoutes.cjs');
 const flightRoutes = require('../routes/flightRoutes.cjs');

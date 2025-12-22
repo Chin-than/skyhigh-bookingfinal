@@ -1,7 +1,7 @@
 // File: api/index.cjs
 const express = require('express');
 const dotenv = require('dotenv');
-const mongoose = require('mongoose');
+const { Sequelize } = require('sequelize');
 const cors = require('cors');
 const client = require('prom-client');
 
@@ -44,21 +44,28 @@ app.use(cors({
 app.use(express.json());
 
 // ----- 4. DATABASE CONNECTION -----
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://Chintu:Chinthan@cluster0.ogvktf8.mongodb.net/?appName=Cluster0";
+const sequelize = new Sequelize('skyhigh_db', 'postgres', 'root', {
+    host: 'localhost',
+    dialect: 'postgres',
+    logging: false
+});
 
 const connectDB = async () => {
     try {
-        await mongoose.connect(MONGO_URI, {
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-        });
-        console.log('✅ MongoDB Atlas Connected Successfully!');
+        await sequelize.authenticate();
+        // sync() creates tables based on models. 
+        // Use { alter: true } during development to update tables as models change.
+        await sequelize.sync({ alter: true }); 
+        console.log('✅ Local PostgreSQL Connected Successfully!');
     } catch (error) {
-        console.error(`❌ MongoDB Connection Error: ${error.message}`);
+        console.error('❌ PostgreSQL Connection Error:', error.message);
         process.exit(1);
     }
 };
+
 connectDB();
+
+
 
 // ----- 5. ROUTES -----
 const authRoutes = require('../routes/authRoutes.cjs');
@@ -87,4 +94,4 @@ if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () => console.log(`🚀 Server started on http://localhost:${PORT}`));
 }
 
-module.exports = app;
+module.exports = { app, sequelize };

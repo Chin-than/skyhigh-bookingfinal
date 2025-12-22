@@ -1,20 +1,17 @@
-// File: models/User.js
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../api/index.cjs');
 
-const mongoose = require('mongoose');
-
-const UserSchema = new  mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true }, // Stored HASHED
-    
-    // Optional fields from your types.ts
-    phone: String,
-    dob: Date,
-    address: String,
-    gender: { type: String, enum: ['Male', 'Female', 'Other', 'Prefer not to say'] },
-    nationality: String,
-
-    createdAt: { type: Date, default: Date.now }
+const User = sequelize.define('User', {
+    name: { type: DataTypes.STRING, allowNull: false },
+    email: { type: DataTypes.STRING, allowNull: false, unique: true },
+    password: { type: DataTypes.STRING, allowNull: false },
+    phone: { type: DataTypes.STRING },
+    dob: { type: DataTypes.DATE },
+    address: { type: DataTypes.TEXT },
+    gender: { 
+        type: DataTypes.ENUM('Male', 'Female', 'Other', 'Prefer not to say') 
+    },
+    nationality: { type: DataTypes.STRING }
 });
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = User;

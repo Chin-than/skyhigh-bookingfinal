@@ -15,7 +15,7 @@ router.post('/signup', async (req, res) => {
     const { name, email, password } = req.body;
 
     try {
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ where: { email } });
         if (user) {
             return res.status(400).json({ msg: 'User with this email already exists' });
         }
@@ -94,7 +94,7 @@ router.put('/profile', async (req, res) => {
     const { id, name, email, phone, dob, address, gender, nationality } = req.body;
 
     try {
-        let user = await User.findById(id);
+        let user = await User.findByPk(id);
 
         if (!user) {
             return res.status(404).json({ msg: 'User not found' });

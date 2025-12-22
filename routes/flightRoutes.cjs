@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
 
     try {
         // Fetch ALL flights for now, since filtering logic is complex and we are focusing on connection
-        const flights = await Flight.find();
+        const flights = await Flight.findAll();
         
         // Return the array of flights
         res.json(flights);

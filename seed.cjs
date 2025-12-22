@@ -1,15 +1,8 @@
 // File: seed.cjs
-const mongoose = require('mongoose');
+const { sequelize } = require('./api/index.cjs');
+const Flight = require('./models/Flight.cjs');
 
-// Require the Flight model
-const Flight = require('./models/Flight.cjs'); 
-
-// The MongoDB Connection URI (Using the working admin_user credentials)
-const MONGO_URI = "mongodb+srv://Chintu:Chinthan@cluster0.ogvktf8.mongodb.net/?appName=Cluster0";
-
-// --- FLIGHT DATA ---
-const MOCK_FLIGHTS_DATA = [
-  {
+const MOCK_FLIGHTS_DATA = [ {
     flightId: 'f1',
     airline: 'IndiGo',
     flightNumber: '6E-2045',
@@ -138,30 +131,23 @@ const MOCK_FLIGHTS_DATA = [
     arrivalTime: '2023-11-27T20:15:00',
     price: 5300,
     duration: '2h 15m'
-  }
-];
+  } ];
 
 const seedDB = async () => {
     try {
-        await mongoose.connect(MONGO_URI);
-        console.log('--- MongoDB Atlas Connected for Seeding ---');
-
-        // 1. DELETE existing flights so we don't get duplicates
-        await Flight.deleteMany({});
-        console.log('✅ Existing flights deleted.');
-
-        // 2. INSERT the new flights
-        await Flight.insertMany(MOCK_FLIGHTS_DATA);
+        // Authenticate before syncing
+        await sequelize.authenticate();
+        await sequelize.sync({ force: true }); 
+        console.log('✅ Database cleared and tables recreated.');
         
-        // This is the message you were missing!
-        console.log(`✅ ${MOCK_FLIGHTS_DATA.length} new flights successfully seeded!`);
-
+        await Flight.bulkCreate(MOCK_FLIGHTS_DATA);
+        console.log(`✅ ${MOCK_FLIGHTS_DATA.length} flights successfully seeded!`);
     } catch (error) {
         console.error('❌ SEEDING FAILED:', error.message);
     } finally {
-        await mongoose.connection.close();
+        await sequelize.close();
         process.exit();
     }
-}
+};
 
 seedDB();

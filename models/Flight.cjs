@@ -1,21 +1,18 @@
-// File: models/Flight.js
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../api/index.cjs');
 
-const mongoose = require('mongoose');
-
-const FlightSchema = new mongoose.Schema({
-    // Corresponds to your Flight interface in types.ts
-    flightId: { type: String, required: true, unique: true },
-    airline: String,
-    flightNumber: String,
-    origin: String,
-    originCode: String,
-    destination: String,
-    destinationCode: String,
-    departureTime: Date, // Use Date for easy comparison
-    arrivalTime: Date,   // Use Date
-    price: Number,
-    duration: String,
-    // Add seats property if you decide to store seat data per flight instance
+const Flight = sequelize.define('Flight', {
+    flightId: { type: DataTypes.STRING, allowNull: false, unique: true },
+    airline: DataTypes.STRING,
+    flightNumber: DataTypes.STRING,
+    origin: DataTypes.STRING,
+    originCode: DataTypes.STRING,
+    destination: DataTypes.STRING,
+    destinationCode: DataTypes.STRING,
+    departureTime: DataTypes.DATE,
+    arrivalTime: DataTypes.DATE,
+    price: DataTypes.INTEGER,
+    duration: DataTypes.STRING
 });
 
-module.exports = mongoose.model('Flight', FlightSchema);
+module.exports = Flight;

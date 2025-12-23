@@ -18,33 +18,88 @@ const Payment: React.FC<PaymentProps> = ({ flight, seat, onPaymentComplete, onBa
   const totalAmount = flight.price + seat.price;
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
+  e.preventDefault();
 
-    // Simulate payment processing delay
-    setTimeout(() => {
-      setIsProcessing(false);
-      onPaymentComplete();
-    }, 2000);
-  };
+  // 1. Validate Card Number (Compulsory 16 digits)
+  const rawCardNumber = cardNumber.replace(/\s/g, '');
+  if (rawCardNumber.length !== 16) {
+    alert("Invalid Card: Must be exactly 16 digits.");
+    return;
+  }
+
+  // 2. Validate Expiry Date (Format: MM/YY)
+  const expiryParts = expiry.split('/');
+  if (expiryParts.length !== 2 || expiryParts[1].length !== 2) {
+    alert("Invalid Expiry: Use MM/YY format.");
+    return;
+  }
+
+  const month = parseInt(expiryParts[0]);
+  const year = parseInt(expiryParts[1]);
+
+  // Compulsory Month check
+  if (month < 1 || month > 12) {
+    alert("Invalid Month: Must be between 01 and 12.");
+    return;
+  }
+
+  // Compulsory Year check (Min 2026)
+  if (year < 26) {
+    alert("Invalid Year: Expiration must be 2026 or later.");
+    return;
+  }
+
+  // 3. If all checks pass, proceed to process
+  setIsProcessing(true);
+
+  // Simulate payment processing delay
+  setTimeout(() => {
+    setIsProcessing(false);
+    onPaymentComplete();
+  }, 2000);
+};
 
   // Simple formatting for card number
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '').substring(0, 16);
-    const parts = [];
-    for (let i = 0; i < value.length; i += 4) {
-      parts.push(value.substring(i, i + 4));
-    }
-    setCardNumber(parts.join(' '));
-  };
+  // 1. Remove everything that isn't a number
+  const rawValue = e.target.value.replace(/\D/g, '');
+  // 2. Limit to exactly 16 digits
+  const trimmedValue = rawValue.substring(0, 16);  
+  // 3. Add spaces every 4 digits for readability
+  const formattedValue = trimmedValue.match(/.{1,4}/g)?.join(' ') || '';
+  setCardNumber(formattedValue);
+};
 
   const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, '').substring(0, 4);
-    if (value.length >= 2) {
-      value = value.substring(0, 2) + '/' + value.substring(2);
+  // 1. Remove non-digits and limit to 4 characters (MMYY)
+  let input = e.target.value.replace(/\D/g, '').substring(0, 4);
+  
+  // 2. Validate Month (First 2 digits)
+  if (input.length >= 2) {
+    const month = parseInt(input.substring(0, 2));
+    if (month > 12) {
+      input = '12' + input.substring(2); // Cap at 12 if user types 13-99
+    } else if (month === 0 && input.length === 2) {
+      input = '01'; // Prevent 00 months
     }
-    setExpiry(value);
-  };
+  }
+
+  // 3. Validate Year (Last 2 digits)
+  if (input.length === 4) {
+    const year = parseInt(input.substring(2, 4));
+    if (year < 26) {
+      input = input.substring(0, 2) + '26'; // Force minimum 2026
+    }
+  }
+
+  // 4. Format with slash for display
+  let formatted = input;
+  if (input.length >= 2) {
+    formatted = input.substring(0, 2) + '/' + input.substring(2);
+  }
+  
+  setExpiry(formatted);
+};
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 animate-fade-in">
@@ -166,8 +221,12 @@ const Payment: React.FC<PaymentProps> = ({ flight, seat, onPaymentComplete, onBa
 
               <button
                 type="submit"
-                disabled={isProcessing}
-                className="w-full bg-brand-600 text-white py-4 rounded-lg font-bold text-lg shadow-md hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed mt-4"
+                disabled={
+                  isProcessing || 
+                  cardNumber.replace(/\s/g, '').length !== 16 || 
+                  parseInt(expiry.split('/')[1]) < 26
+                }
+                className="w-full bg-brand-600 text-white py-4 rounded-lg font-bold text-lg shadow-md hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition-all disabled:opacity-50 disabled:bg-slate-400 disabled:cursor-not-allowed mt-4"
               >
                 {isProcessing ? (
                   <span className="flex items-center justify-center gap-2">

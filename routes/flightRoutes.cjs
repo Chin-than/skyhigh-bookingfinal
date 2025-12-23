@@ -2,30 +2,25 @@
 const express = require('express');
 const router = express.Router();
 const Flight = require('../models/Flight.cjs');
-// Import startTimer from your metrics file
-const { startTimer } = require('./metrics.cjs');
 
-// NOTE: You'll need to seed your database with flight data first!
+// Import the ALREADY REGISTERED metric from your main server file
+const { httpRequestDurationSeconds } = require('../api/index.cjs');
 
-// @route   GET /api/flights/
-// @desc    Fetch all available flights based on search criteria
+// REMOVE the following lines:
+// const client = require('prom-client');
+// const httpRequestDurationMicroseconds = new client.Histogram({ ... });
+
 router.get('/', async (req, res) => {
-    // Start the timer for this specific route
-    // This matches the "route" label used in your Grafana query
-    const end = startTimer('/api/flights/');
-
+    // Use the imported metric
+    const end = httpRequestDurationSeconds.startTimer(); 
+    
     try {
-        // Fetch ALL flights
-        const flights = await Flight.find(); // Use .find() for Mongoose
-        
-        // Return the array of flights
+        const flights = await Flight.findAll(); 
         res.json(flights);
+        end({ route: '/api/flights', status_code: res.statusCode, method: req.method });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error fetching flights');
-    } finally {
-        // Stop the timer and record the metric even if the request fails
-        end();
+        end({ route: '/api/flights', status_code: 500, method: req.method });
+        res.status(500).send('Server Error');
     }
 });
 

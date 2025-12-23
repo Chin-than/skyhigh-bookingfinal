@@ -1,6 +1,7 @@
 // File: seed.cjs
 const { sequelize } = require('./api/index.cjs');
 const Flight = require('./models/Flight.cjs');
+const User = require('./models/User.cjs');
 
 const MOCK_FLIGHTS_DATA = [ {
     flightId: 'f1',
@@ -135,15 +136,18 @@ const MOCK_FLIGHTS_DATA = [ {
 
 const seedDB = async () => {
     try {
-        // Authenticate before syncing
+        // Authenticate connection first
         await sequelize.authenticate();
+        console.log('✅ Connection has been established successfully.');
+
+        // force: true will DROP existing tables and CREATE new ones
         await sequelize.sync({ force: true }); 
-        console.log('✅ Database cleared and tables recreated.');
-        
+        console.log('✅ All models were synchronized successfully.');
+
         await Flight.bulkCreate(MOCK_FLIGHTS_DATA);
-        console.log(`✅ ${MOCK_FLIGHTS_DATA.length} flights successfully seeded!`);
+        console.log(`✅ ${MOCK_FLIGHTS_DATA.length} flights seeded!`);
     } catch (error) {
-        console.error('❌ SEEDING FAILED:', error.message);
+        console.error('❌ SEEDING FAILED:', error);
     } finally {
         await sequelize.close();
         process.exit();

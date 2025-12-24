@@ -1,0 +1,106 @@
+# ------------------------------------------------------------------------------
+# Filebeat Configuration - SkyHigh Booking Project (Local Development)
+# ------------------------------------------------------------------------------
+# Purpose:
+#   - Collect logs from the SkyHigh Express API
+#   - Handle multiline JSON log entries
+#   - Decode the JSON inside "message" into structured ECS fields
+# ------------------------------------------------------------------------------
+
+filebeat.inputs:
+  - type: filestream
+    id: skyhigh-api-filestream
+
+    # --------------------------------------------------------------------------
+    # Log Path (Updated to target the SkyHigh API logs directory)
+    # --------------------------------------------------------------------------
+    paths:
+      - "C:/Users/girisha-1/Downloads/Skyhigh/skyhigh-bookingfinal/api/logs/*.log"
+
+    # --------------------------------------------------------------------------
+    # MULTILINE JOINING
+    # Merges lines until a new JSON object starts with '{'
+    # --------------------------------------------------------------------------
+    multiline:
+      pattern: '^\{' # new JSON block begins
+      negate: true # treat all NON-matching lines as continuation
+      match: after # append to previous line
+
+    # --------------------------------------------------------------------------
+    # Tag logs with SkyHigh metadata
+    # --------------------------------------------------------------------------
+    fields:
+      app:
+        service: "skyhigh-booking-api"
+        environment: "local-dev"
+    fields_under_root: true
+
+    # --------------------------------------------------------------------------
+    # PROCESSORS — Decode JSON and map to ECS fields
+    # --------------------------------------------------------------------------
+    processors:
+      # Step 1: Decode JSON stored inside the "message" field
+      - decode_json_fields:
+          fields: ["message"]
+          max_depth: 5
+          target: "log_record"
+          overwrite_keys: false
+          add_error_key: true
+
+      # Step 2: Rename metadata to ECS-compliant service fields
+      - rename:
+          fields:
+            - from: "app.service"
+              to: "service.name"
+            - from: "app.environment"
+              to: "service.environment"
+          ignore_missing: true
+          fail_on_error: false
+
+      # Step 3: Promote log fields to ECS HTTP fields (matching Express API labels)
+      # These align with the labels used in your Prometheus metrics
+      - copy_fields:
+          fields:
+            - from: "log_record.status_code"
+              to: "http.response.status_code"
+            - from: "log_record.method"
+              to: "http.request.method"
+            - from: "log_record.route"
+              to: "http.request.path"
+          ignore_missing: true
+          fail_on_error: false
+
+# ------------------------------------------------------------------------------
+# Index Template (Custom SkyHigh naming)
+# ------------------------------------------------------------------------------
+setup.template.enabled: true
+setup.template.name: "skyhigh-booking-logs"
+setup.template.pattern: "skyhigh-booking-logs-*"
+setup.template.type: index
+setup.template.data_stream.enabled: false
+setup.ilm.enabled: false
+
+# ------------------------------------------------------------------------------
+# Elasticsearch Output (Points to your SkyHigh ES cluster)
+# ------------------------------------------------------------------------------
+output.elasticsearch:
+  hosts: ["http://127.0.0.1:9200"] #
+  index: "skyhigh-booking-logs-%{+yyyy.MM.dd}"
+
+# ------------------------------------------------------------------------------
+# Kibana Integration (Points to SkyHigh Kibana instance)
+# ------------------------------------------------------------------------------
+setup.kibana:
+  host: "http://127.0.0.1:5601" #
+
+# ------------------------------------------------------------------------------
+# Filebeat Self-Logging
+# ------------------------------------------------------------------------------
+logging:
+  level: info
+  to_files: true
+  files:
+    path: logs
+    name: filebeat.log
+    keepfiles: 7
+    permissions: 0644

@@ -1,6 +1,6 @@
 // File: models/Flight.cjs
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../api/index.cjs'); // Ensure this points to your Sequelize instance
+const  sequelize  = require('../services/db.cjs'); // Ensure this points to your Sequelize instance
 
 const Flight = sequelize.define('Flight', {
   flightId: { type: DataTypes.STRING, primaryKey: true },

@@ -1,10 +1,11 @@
 // File: routes/authRoutes.cjs
 
 const express = require('express');
-const router = express.Router(); // ✅ router is defined here FIRST
+const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken'); 
-const User = require('../models/User.cjs'); 
+const User = require('../models/User.cjs');
+const { httpRequestDurationSeconds } = require('./metrics.cjs');
 
 // Secret key for JWT (use process.env in a real app!)
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key';
@@ -129,4 +130,4 @@ router.put('/profile', async (req, res) => {
     }
 });
 
-module.exports = router; // ✅ Export router at the VERY END
+module.exports = {router , httpRequestDurationSeconds}; // ✅ Export router at the VERY END

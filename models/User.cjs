@@ -1,5 +1,7 @@
+//models/User.cjs
+
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../api/index.cjs');
+const  sequelize  = require('../services/db.cjs');
 
 const User = sequelize.define('User', {
     name: { type: DataTypes.STRING, allowNull: false },

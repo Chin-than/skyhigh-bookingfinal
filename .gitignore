@@ -34,3 +34,4 @@ config/local.js
 
 # Secrets & Configs
 grafana.ini
+app.log

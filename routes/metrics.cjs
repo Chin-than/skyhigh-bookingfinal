@@ -1,31 +1,20 @@
+// File: routes/metrics.cjs
 const express = require('express');
 const router = express.Router();
 const client = require('prom-client');
 
-// Create a new Registry to manage metrics
 const register = new client.Registry();
+register.setDefaultLabels({ app: 'skyhigh-booking' });
+client.collectDefaultMetrics({ register, prefix: 'node_' });
 
-// Add a default label to all metrics (useful if you have multiple apps)
-register.setDefaultLabels({
-  app: 'skyhigh-booking'
-});
-
-// Enable collection of default system metrics (CPU, Memory, Event Loop, etc.)
-client.collectDefaultMetrics({ 
-    register,
-    prefix: 'node_' // Optional: adds a prefix to default metrics
-});
-
-// Create a custom counter for HTTP requests (Optional example)
-const httpRequestCounter = new client.Counter({
-    name: 'http_requests_total',
-    help: 'Total number of HTTP requests',
+const httpRequestDurationSeconds = new client.Histogram({
+    name: 'http_request_duration_seconds',
+    help: 'Duration of HTTP requests in seconds',
     labelNames: ['method', 'route', 'status_code'],
+    buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2, 5],
     registers: [register]
 });
 
-// @route   GET /api/metrics
-// @desc    Expose metrics for Prometheus scraping
 router.get('/', async (req, res) => {
     try {
         res.setHeader('Content-Type', register.contentType);
@@ -35,4 +24,9 @@ router.get('/', async (req, res) => {
     }
 });
 
-module.exports = router;
+// IMPORTANT: Exporting as an object with specific keys
+module.exports = { 
+    metricsRouter: router, 
+    register, 
+    httpRequestDurationSeconds 
+};   

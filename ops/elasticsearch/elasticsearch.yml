@@ -1,0 +1,37 @@
+# ======================== Elasticsearch Configuration =========================
+# File: ops/elasticsearch/elasticsearch.yml
+
+# --- Cluster & Node ---
+# Customizing cluster name to match the project branding
+cluster.name: skyhigh-booking-cluster
+node.name: skyhigh-main-node
+
+# --- Network ---
+# Standard network configuration for local development
+network.host: 0.0.0.0
+http.port: 9200
+
+# --- Discovery ---
+# Enforce single-node mode for local development to avoid discovery errors
+discovery.type: single-node
+
+# --- Security ---
+# Security is disabled for local development/testing as per standard project setup
+xpack.security.enabled: false
+xpack.security.enrollment.enabled: false
+xpack.security.http.ssl.enabled: false
+xpack.security.transport.ssl.enabled: false
+
+# --- Monitoring & Observability ---
+# Enabled to allow integration with the existing Grafana/Prometheus stack
+xpack.monitoring.collection.enabled: true
+
+# --- Performance ---
+bootstrap.memory_lock: true
+
+# --- Cross-Origin Resource Sharing (CORS) ---
+# Updated to explicitly allow the SkyHigh frontend running on port 3000
+http.cors.enabled: true
+http.cors.allow-origin: "http://localhost:3000"
+http.cors.allow-methods: OPTIONS, HEAD, GET, POST, PUT, DELETE
+http.cors.allow-headers: "X-Requested-With, Content-Type, Content-Length, Authorization"

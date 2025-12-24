@@ -1,0 +1,44 @@
+# ------------------------------------------------------------------------------
+# Kibana Configuration - SkyHigh Booking Project
+# ------------------------------------------------------------------------------
+# Optimized for local development with the SkyHigh service stack.
+# ------------------------------------------------------------------------------
+
+# Port and host settings
+server.port: 5601
+# Binding to 0.0.0.0 allows access if running inside a container or VM, 
+# matching the network host strategy of the SkyHigh ES node.
+server.host: "0.0.0.0"
+
+# Service Naming
+# Customizing the name to match project branding found in metadata.json
+server.name: "skyhigh-booking-kibana"
+
+# URL of the local Elasticsearch instance
+# Connects to the SkyHigh ES cluster configured on port 9200
+elasticsearch.hosts: ["http://localhost:9200"]
+
+# Monitoring & Health
+# Enables integration to monitor the health of the SkyHigh stack
+monitoring.ui.container.elasticsearch.enabled: true
+
+# Security & Encryption
+# Static key for local development to ensure environment stability
+xpack.encryptedSavedObjects.encryptionKey: "skyhigh-local-dev-encrypt-key-32"
+xpack.reporting.encryptionKey: "skyhigh-local-dev-report-key-32"
+xpack.security.encryptionKey: "skyhigh-local-dev-secure-key-32"
+
+# Logs
+# Configured to maintain persistent logs within the project structure
+logging:
+  appenders:
+    file:
+      type: file
+      fileName: logs/kibana.log
+      layout:
+        type: pattern
+  root:
+    appenders: [file]
+
+# Localization
+i18n.locale: "en"
